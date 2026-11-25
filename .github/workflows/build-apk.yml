@@ -9,6 +9,11 @@ on:
   release:
     types: [published]
 
+# Una compilación a la vez por rama: evita que dos ejecuciones publiquen la release a la vez
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write   # para adjuntar el APK a las releases
 
