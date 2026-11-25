@@ -19,8 +19,10 @@ Es la evolución de `MFQ_all v5.py` (versión de consola).
 ## Usarlo en el móvil
 
 **Opción A – Instalar el APK (recomendada)**
-1. Abre en el móvil **https://github.com/ToxBox8/MFQ_all-GitHub/releases/tag/ultima-version**
-2. Descarga **MFQ_All.apk** y ábrelo.
+1. Abre en el móvil este enlace de descarga directa:
+   **https://github.com/ToxBox8/MFQ_all-GitHub/releases/latest/download/MFQ_All.apk**
+   (o la página de la release: https://github.com/ToxBox8/MFQ_all-GitHub/releases/latest)
+2. Abre el archivo descargado.
 3. Acepta «instalar apps de origen desconocido» si Android te lo pide.
 
 Cada vez que se sube código, GitHub Actions pasa los tests, compila el APK y

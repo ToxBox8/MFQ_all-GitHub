@@ -52,10 +52,10 @@ jobs:
           cp "$(ls build/apk/*.apk | head -n 1)" MFQ_All.apk
           NOTES="APK compilado automáticamente desde la rama ${GITHUB_REF_NAME} (commit ${GITHUB_SHA::7}). Descarga MFQ_All.apk e instálalo en Android."
           if ! gh release view ultima-version > /dev/null 2>&1; then
-            gh release create ultima-version --prerelease --target "$GITHUB_SHA" \
+            gh release create ultima-version --latest --target "$GITHUB_SHA" \
               --title "MFQ All · última versión" --notes "$NOTES"
           else
-            gh release edit ultima-version --notes "$NOTES"
+            gh release edit ultima-version --notes "$NOTES" --prerelease=false --latest
           fi
           gh release upload ultima-version MFQ_All.apk --clobber
       - name: Adjuntar a la release
