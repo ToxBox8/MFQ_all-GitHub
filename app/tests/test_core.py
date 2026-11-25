@@ -184,3 +184,105 @@ def test_units():
         units.convert(-300, "Temperatura", "°C", "K")
     for q in units.quantities():
         assert units.units_of(q)
+
+
+# ------------------------------------------------------------------ química
+from mfq.core import chemistry as chem  # noqa: E402
+from mfq.core import maths_extra as mx  # noqa: E402
+
+
+def test_periodic_table_complete():
+    assert len(chem.ELEMENTS) == 118
+    assert [e.z for e in chem.ELEMENTS] == list(range(1, 119))
+    assert len(chem.BY_SYMBOL) == 118
+
+
+@pytest.mark.parametrize("formula,mass", [
+    ("H2O", 18.015), ("NaCl", 58.44), ("CO2", 44.009), ("C6H12O6", 180.156),
+    ("Ca(OH)2", 74.092), ("H2SO4", 98.072), ("CuSO4·5H2O", 249.677),
+    ("Al2(SO4)3", 342.14), ("K4[Fe(CN)6]", 368.35), ("H₂O", 18.015),
+])
+def test_molar_mass(formula, mass):
+    assert chem.molar_mass(formula).mass == pytest.approx(mass, abs=0.01)
+
+
+def test_composition_sums_100():
+    comp = chem.molar_mass("C6H12O6").composition
+    assert sum(p for *_, p in comp) == pytest.approx(100)
+
+
+@pytest.mark.parametrize("bad", ["", "Xx2", "H2O)", "(H2O", "h2o", "2", "H0"])
+def test_bad_formulas(bad):
+    with pytest.raises(CalcError):
+        chem.parse_formula(bad)
+
+
+def test_pretty_and_search():
+    assert chem.pretty_formula("CuSO4·5H2O") == "CuSO₄·5H₂O"
+    assert chem.find_elements("fe")[0].symbol == "Fe"
+    assert chem.find_elements("26")[0].name == "Hierro"
+    assert chem.find_elements("oro")[0].symbol == "Au"
+    assert all(e.group == chem.GN for e in chem.find_elements("gas noble"))
+
+
+# ---------------------------------------------------------- mates extra
+@pytest.mark.parametrize("expr,deg,value", [
+    ("2(3+4)^2", False, 98), ("√9 + 1e-3", False, 3.001), ("sin(30)", True, 0.5),
+    ("asin(0.5)", True, 30), ("cos(pi)", False, -1), ("10 ÷ 4", False, 2.5),
+    ("2π", False, 2 * math.pi), ("ln(e^2)", False, 2), ("log(1000)", False, 3),
+])
+def test_evaluate(expr, deg, value):
+    assert mx.evaluate(expr, degrees=deg) == pytest.approx(value)
+
+
+@pytest.mark.parametrize("bad", ["1/0", "sqrt(-1)", "2x", "import os"])
+def test_evaluate_errors(bad):
+    with pytest.raises(CalcError):
+        mx.evaluate(bad)
+
+
+def test_statistics():
+    s = mx.describe(mx.parse_data("2 4 4 4 5 5 7 9"))
+    assert s.mean == 5 and s.median == 4.5 and s.modes == [4]
+    assert s.std_pop == pytest.approx(2) and s.std_sample == pytest.approx(2.138, abs=1e-3)
+    assert mx.parse_data("1,5; 2,5") == [1.5, 2.5]
+    assert mx.parse_data("1,2,3") == [1, 2, 3]
+    assert mx.describe([1, 2, 3]).modes == []
+
+
+def test_linear_systems():
+    assert mx.solve_linear([[2, 1], [1, -1]], [5, 1]) == pytest.approx([2, 1])
+    assert mx.solve_linear([[1, 1, 1], [2, -1, 1], [1, 2, -1]], [6, 3, 2]) == pytest.approx([1, 2, 3])
+    with pytest.raises(CalcError, match="incompatible"):
+        mx.solve_linear([[1, 1], [2, 2]], [1, 3])
+    with pytest.raises(CalcError, match="indeterminado"):
+        mx.solve_linear([[1, 1], [2, 2]], [1, 2])
+
+
+def test_triangles():
+    t = mx.solve_triangle(a=3, b=4, c=5)[0]
+    assert t.C == pytest.approx(90) and t.area == pytest.approx(6) and "rectángulo" in t.kind
+    t = mx.solve_triangle(b=4, c=5, A=60)[0]                         # LAL
+    assert t.a == pytest.approx(math.sqrt(21))
+    t = mx.solve_triangle(a=10, B=50, C=60)[0]                       # ALA
+    assert t.A == pytest.approx(70)
+    assert len(mx.solve_triangle(a=6, b=8, A=30)) == 2                # LLA ambiguo
+    assert "equilátero" in mx.solve_triangle(a=2, b=2, c=2)[0].kind
+    for bad in [dict(a=1, b=2, c=5), dict(A=30, B=60, C=90), dict(a=1, b=2), dict(a=1, b=10, A=60)]:
+        with pytest.raises(CalcError):
+            mx.solve_triangle(**bad)
+
+
+def test_fractions_and_percent():
+    assert str(mx.fraction_op("1/2", "+", "1/3")) == "5/6"
+    assert str(mx.fraction_op("3/4", "÷", "1/2")) == "3/2"
+    assert str(mx.parse_fraction("0.375")) == "3/8"
+    assert mx.mixed(mx.parse_fraction("7/3")) == "2 1/3"
+    assert mx.mixed(mx.parse_fraction("-7/3")) == "-2 1/3"
+    with pytest.raises(CalcError):
+        mx.fraction_op("1", "÷", "0")
+    assert mx.percent_of(21, 150) == pytest.approx(31.5)
+    assert mx.what_percent(30, 120) == 25
+    assert mx.percent_change(80, 60) == -25
+    assert mx.rule_of_three(3, 4.5, 10) == 15
+    assert mx.rule_of_three(4, 6, 3, inverse=True) == 8

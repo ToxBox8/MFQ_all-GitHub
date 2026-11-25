@@ -5,6 +5,10 @@ from __future__ import annotations
 import math
 
 
+# Cifras significativas por defecto (la app lo cambia desde Ajustes)
+SETTINGS = {"sig": 6}
+
+
 class CalcError(ValueError):
     """Error de cálculo con un mensaje pensado para mostrarse al usuario."""
 
@@ -34,11 +38,12 @@ def parse_number(text: str, name: str = "valor") -> float:
     return value
 
 
-def fmt(value: float, sig: int = 6) -> str:
+def fmt(value: float, sig: int | None = None) -> str:
     """Formatea un número con `sig` cifras significativas.
 
     Usa notación científica (×10ⁿ) para valores muy grandes o muy pequeños.
     """
+    sig = sig or SETTINGS["sig"]
     if isinstance(value, complex):
         re, im = value.real, value.imag
         if abs(im) < 1e-15:

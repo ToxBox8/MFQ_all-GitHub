@@ -53,13 +53,20 @@ _FUNCS: dict[str, Callable] = {
     "log": math.log10, "ln": math.log, "exp": math.exp, "abs": abs,
     "sen": math.sin,
 }
-_CONSTS = {"pi": math.pi, "e": math.e}
+_FUNCS_DEG: dict[str, Callable] = {
+    **_FUNCS,
+    "sin": lambda v: math.sin(math.radians(v)), "sen": lambda v: math.sin(math.radians(v)),
+    "cos": lambda v: math.cos(math.radians(v)), "tan": lambda v: math.tan(math.radians(v)),
+    "asin": lambda v: math.degrees(math.asin(v)), "acos": lambda v: math.degrees(math.acos(v)),
+    "atan": lambda v: math.degrees(math.atan(v)),
+}
+_CONSTS = {"pi": math.pi, "e": math.e, "π": math.pi}
 _BINOPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
            ast.Div: operator.truediv, ast.Pow: operator.pow, ast.Mod: operator.mod}
 _UNOPS = {ast.UAdd: operator.pos, ast.USub: operator.neg}
 
 
-def compile_function(expr: str) -> Callable[[float], float]:
+def compile_function(expr: str, degrees: bool = False) -> Callable[[float], float]:
     """Compila una expresión en x de forma segura (sin eval).
 
     Admite: + − * / ^ %, paréntesis, constantes pi y e, y las funciones
@@ -73,8 +80,10 @@ def compile_function(expr: str) -> Callable[[float], float]:
         raise CalcError("La expresión no es válida.") from None
     _validate(tree.body)
 
+    funcs = _FUNCS_DEG if degrees else _FUNCS
+
     def f(x: float) -> float:
-        return _eval(tree.body, x)
+        return _eval(tree.body, x, funcs)
 
     return f
 
@@ -82,7 +91,8 @@ def compile_function(expr: str) -> Callable[[float], float]:
 def _preprocess(expr: str) -> str:
     import re
     s = expr.strip().lower().replace(" ", "").replace("^", "**").replace("×", "*").replace("·", "*")
-    s = s.replace(",", ".").replace("−", "-")
+    s = s.replace(",", ".").replace("−", "-").replace("÷", "/").replace("π", "pi")
+    s = re.sub(r"√(\d+(?:\.\d+)?|pi|e|x)", r"sqrt(\1)", s).replace("√", "sqrt")
     if s.startswith("y="):
         s = s[2:]
     if s.startswith("f(x)="):
@@ -90,7 +100,7 @@ def _preprocess(expr: str) -> str:
     if not s:
         raise CalcError("Escribe una función, por ejemplo: x^2 - 3x + 2")
     # 2x -> 2*x, 2( -> 2*(, )x -> )*x, )( -> )*(, x( -> x*(
-    s = re.sub(r"(\d)\s*([a-z(])", r"\1*\2", s)
+    s = re.sub(r"(\d)(?!e[+-]?\d)([a-z(])", r"\1*\2", s)  # respeta 1e-5
     s = re.sub(r"\)\s*([a-z0-9(])", r")*\1", s)
     s = re.sub(r"\bx\s*\(", "x*(", s)
     return s
@@ -112,20 +122,20 @@ def _validate(node: ast.AST) -> None:
         raise CalcError("La expresión contiene elementos no permitidos.")
 
 
-def _eval(node: ast.AST, x: float) -> float:
+def _eval(node: ast.AST, x: float, funcs: dict[str, Callable]) -> float:
     if isinstance(node, ast.BinOp):
-        left, right = _eval(node.left, x), _eval(node.right, x)
+        left, right = _eval(node.left, x, funcs), _eval(node.right, x, funcs)
         if isinstance(node.op, ast.Pow) and abs(right) > 1000:
             raise OverflowError
         return _BINOPS[type(node.op)](left, right)
     if isinstance(node, ast.UnaryOp):
-        return _UNOPS[type(node.op)](_eval(node.operand, x))
+        return _UNOPS[type(node.op)](_eval(node.operand, x, funcs))
     if isinstance(node, ast.Constant):
         return float(node.value)
     if isinstance(node, ast.Name):
         return x if node.id == "x" else _CONSTS[node.id]
     if isinstance(node, ast.Call):
-        return _FUNCS[node.func.id](_eval(node.args[0], x))
+        return funcs[node.func.id](_eval(node.args[0], x, funcs))
     raise CalcError("Expresión no soportada.")
 
 

@@ -1,26 +1,31 @@
 # MFQ All 6 · App para móvil y ordenador
 
+<img src="src/assets/icon.png" width="96" align="right" alt="Icono">
+
 Calculadora de **Física, Química y Matemáticas** con interfaz gráfica moderna
 (Material 3, modo claro/oscuro), hecha en Python con [Flet](https://flet.dev).
 Es la evolución de `MFQ_all v5.py` (versión de consola).
 
 ## Qué incluye
 
-| Sección | Contenido |
+| Pestaña | Contenido |
 |---|---|
-| **FyQ** | 29 fórmulas en 9 categorías (cinemática, tiro parabólico, dinámica, energía, gravitación, fluidos, electricidad, ondas, química). En cada una eliges **qué variable despejar** y la app pide solo los datos necesarios. Buscador sin tildes ni mayúsculas. |
-| **Conversor** | Longitud, masa, volumen, tiempo, velocidad, presión, energía y temperatura. |
-| **Mates** | Ecuación de 2º grado (con raíces complejas, vértice y gráfica), representar hasta 3 funciones, MCD/MCM/factores primos, texto↔binario y cambio de base, círculo, π con hasta 5000 decimales, dados. |
-| **Historial** | Se guarda en el dispositivo. Mantén pulsado un resultado para copiarlo. |
+| **Física** | 29 fórmulas en 9 categorías (cinemática, tiro parabólico, dinámica, energía, gravitación, fluidos, electricidad, ondas, química). En cada una eliges **qué variable despejar**, la app pide solo los datos necesarios y muestra el desarrollo *Datos → Fórmula → Resultado*, como en un examen. Buscador, **favoritas** (★), **conversor de unidades** (8 magnitudes, con tabla de equivalencias) y **constantes físicas**. |
+| **Química** | **Masa molar** de cualquier fórmula (paréntesis, corchetes, hidratos como `CuSO4·5H2O`) con composición en %, paso de gramos a moles y moléculas, y **tabla periódica** de los 118 elementos con buscador. |
+| **Mates** | Calculadora científica (DEG/RAD, `Ans`), porcentajes y regla de tres, fracciones, ecuación de 2º grado con gráfica, sistemas 2×2 y 3×3 (Gauss), representar hasta 3 funciones, resolver triángulos (seno/coseno, caso ambiguo), círculo, MCD/MCM/factores primos, binario y bases, π con hasta 5000 decimales, estadística (media, mediana, moda, cuartiles, desviación típica) y dados. |
+| **Historial** | Se guarda en el dispositivo, agrupado por días y con buscador. Toca un resultado para copiarlo o cópialo todo de una vez. |
+| **Ajustes** | Tema claro / oscuro / del sistema y número de cifras significativas (3–12). |
 
 ## Usarlo en el móvil
 
 **Opción A – Instalar el APK (recomendada)**
-1. En GitHub ve a **Actions → «Tests y APK»** y abre la última ejecución en verde.
-2. Descarga el artefacto **MFQ_All-apk** (es un .zip con el `.apk` dentro).
-3. Pásalo al móvil, ábrelo y acepta «instalar apps de origen desconocido».
+1. Abre en el móvil **https://github.com/ToxBox8/MFQ_all-GitHub/releases/tag/ultima-version**
+2. Descarga **MFQ_All.apk** y ábrelo.
+3. Acepta «instalar apps de origen desconocido» si Android te lo pide.
 
-Si publicas una *Release* en GitHub, el APK se adjunta automáticamente a ella.
+Cada vez que se sube código, GitHub Actions pasa los tests, compila el APK y
+reemplaza el de esa release, así que el enlace siempre tiene la última versión.
+También queda como artefacto en **Actions → «Tests y APK»**.
 
 **Opción B – Probarlo sin instalar nada (desarrollo)**
 1. Instala la app **Flet** desde Google Play.
@@ -53,7 +58,7 @@ pip install pytest "flet==1.1.3"
 python -m pytest -q
 ```
 
-Cada fórmula se comprueba despejando **todas** sus variables y verificando que
+Hay 98 tests. Cada fórmula se comprueba despejando **todas** sus variables y verificando que
 se recupera el valor original, además de valores reales conocidos
 (g en la Tierra ≈ 9,82 m/s², velocidad de escape ≈ 11,2 km/s, 1 mol a 0 °C ≈ 1 atm).
 
@@ -65,12 +70,15 @@ app/
 ├── src/
 │   ├── main.py             punto de entrada y navegación
 │   └── mfq/
-│       ├── core/           lógica pura, sin interfaz (testeable)
-│       │   ├── physics.py  catálogo declarativo de fórmulas
-│       │   ├── maths.py    ecuaciones, funciones, MCD/MCM, π, binario…
-│       │   ├── units.py    conversor de unidades
-│       │   └── numbers.py  lectura de números («3,5», «6.67e-11») y formato
-│       └── ui/             pantallas Flet
+│       ├── core/              lógica pura, sin interfaz (testeable)
+│       │   ├── physics.py     catálogo declarativo de fórmulas
+│       │   ├── chemistry.py   tabla periódica y masas molares
+│       │   ├── constants.py   constantes físicas
+│       │   ├── maths.py       ecuaciones, funciones, MCD/MCM, π, binario…
+│       │   ├── maths_extra.py calculadora, estadística, sistemas, triángulos…
+│       │   ├── units.py       conversor de unidades
+│       │   └── numbers.py     lectura de números («3,5», «6.67e-11») y formato
+│       └── ui/                pantallas Flet (una por pestaña + compartidos)
 └── tests/
 ```
 

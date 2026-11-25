@@ -25,6 +25,34 @@ CATEGORY_ICONS = {
 }
 
 
+def info_text(text: str) -> ft.Text:
+    return ft.Text(text, size=12, color=ft.Colors.ON_SURFACE_VARIANT)
+
+
+def empty_state(icon: ft.IconData, title: str, text: str) -> ft.Control:
+    return ft.Container(
+        ft.Column([ft.Icon(icon, size=64, color=ft.Colors.OUTLINE),
+                   ft.Text(title, size=16, weight=ft.FontWeight.W_500),
+                   ft.Text(text, color=ft.Colors.ON_SURFACE_VARIANT, text_align=ft.TextAlign.CENTER)],
+                  horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=8),
+        padding=48, alignment=ft.Alignment.CENTER)
+
+
+def nav_tile(icon: ft.IconData, title: str, subtitle: str, on_click, highlight: bool = False) -> ft.Control:
+    return ft.Container(
+        ft.ListTile(
+            leading=ft.Icon(icon, color=ft.Colors.PRIMARY),
+            title=ft.Text(title, weight=ft.FontWeight.W_500),
+            subtitle=ft.Text(subtitle, size=12),
+            trailing=ft.Icon(ft.Icons.CHEVRON_RIGHT),
+            on_click=on_click,
+            bgcolor=ft.Colors.SECONDARY_CONTAINER if highlight else None,
+            shape=ft.RoundedRectangleBorder(radius=16),
+        ),
+        padding=ft.Padding.symmetric(horizontal=12, vertical=2),
+    )
+
+
 def pretty(sym: str) -> str:
     return PRETTY.get(sym, sym)
 
@@ -128,7 +156,7 @@ def toast(page: ft.Page, message: str) -> None:
 
 
 def push_page(page: ft.Page, title: str, controls: list[ft.Control],
-              subtitle: str | None = None) -> None:
+              subtitle: str | None = None, actions: list[ft.Control] | None = None) -> None:
     """Abre una pantalla secundaria con botón atrás (incluido el gesto de Android)."""
     title_ctrl: ft.Control = ft.Text(title)
     if subtitle:
@@ -138,7 +166,7 @@ def push_page(page: ft.Page, title: str, controls: list[ft.Control],
     page.views.append(
         ft.View(
             route=f"/{len(page.views)}",
-            appbar=ft.AppBar(title=title_ctrl),
+            appbar=ft.AppBar(title=title_ctrl, actions=actions or []),
             controls=[ft.SafeArea(
                 ft.Container(ft.Column(controls, spacing=16,
                                        horizontal_alignment=ft.CrossAxisAlignment.STRETCH),

@@ -1,6 +1,6 @@
 [project]
 name = "mfq-all"
-version = "6.0.0"
+version = "6.1.0"
 description = "MFQ All: calculadora de Física, Química y Matemáticas para el instituto"
 readme = "README.md"
 requires-python = ">=3.10"

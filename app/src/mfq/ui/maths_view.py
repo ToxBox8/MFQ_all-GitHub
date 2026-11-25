@@ -8,38 +8,66 @@ import flet as ft
 
 from ..core import maths
 from ..core.numbers import CalcError, fmt, parse_number
-from .history import History
+from . import maths_more as mm
+from .context import Ctx
 from .plot import PALETTE, build_plot
-from .widgets import ResultPanel, card, number_field, push_page
+from .widgets import ResultPanel, card, number_field, push_page, section_title
 
 
 class MathsTab(ft.Column):
-    def __init__(self, page: ft.Page, history: History) -> None:
-        self._page = page
-        self.history = history
-        tools: list[tuple[str, str, ft.IconData, Callable]] = [
-            ("Ecuación de 2º grado", "ax² + bx + c = 0, reales y complejas", ft.Icons.FUNCTIONS, self.quadratic),
-            ("Representar funciones", "Dibuja hasta 3 funciones a la vez", ft.Icons.SHOW_CHART, self.plotter),
-            ("MCD, MCM y factores primos", "De varios números enteros", ft.Icons.TAG, self.gcd_lcm),
-            ("Binario y bases", "Texto a binario y cambio de base", ft.Icons.DATA_OBJECT, self.binary),
-            ("Círculo", "Área, perímetro y diámetro", ft.Icons.CIRCLE_OUTLINED, self.circle),
-            ("Calcular π", "Hasta 5000 decimales exactos", ft.Icons.PIE_CHART, self.pi),
-            ("Dados", "Lanza dados de cualquier número de caras", ft.Icons.CASINO, self.dice),
+    def __init__(self, ctx: Ctx) -> None:
+        self.ctx = ctx
+        self._page = ctx.page
+        self.history = ctx.history
+        groups: list[tuple[str, list[tuple[str, str, ft.IconData, Callable]]]] = [
+            ("Cálculo rápido", [
+                ("Calculadora científica", "Con grados/radianes y memoria Ans", ft.Icons.CALCULATE,
+                 lambda: mm.open_calculator(ctx)),
+                ("Porcentajes y regla de tres", "Descuentos, aumentos, proporciones", ft.Icons.PERCENT,
+                 lambda: mm.open_percent(ctx)),
+                ("Fracciones", "Operar, simplificar y número mixto", ft.Icons.SAFETY_DIVIDER,
+                 lambda: mm.open_fractions(ctx)),
+            ]),
+            ("Álgebra y funciones", [
+                ("Ecuación de 2º grado", "ax² + bx + c = 0, reales y complejas", ft.Icons.FUNCTIONS, self.quadratic),
+                ("Sistemas de ecuaciones", "2×2 y 3×3 por el método de Gauss", ft.Icons.GRID_ON,
+                 lambda: mm.open_systems(ctx)),
+                ("Representar funciones", "Dibuja hasta 3 funciones a la vez", ft.Icons.SHOW_CHART, self.plotter),
+            ]),
+            ("Geometría", [
+                ("Resolver triángulos", "Lados, ángulos, área (seno y coseno)", ft.Icons.CHANGE_HISTORY,
+                 lambda: mm.open_triangle(ctx)),
+                ("Círculo", "Área, perímetro y diámetro", ft.Icons.CIRCLE_OUTLINED, self.circle),
+            ]),
+            ("Números", [
+                ("MCD, MCM y factores primos", "De varios números enteros", ft.Icons.TAG, self.gcd_lcm),
+                ("Binario y bases", "Texto a binario y cambio de base", ft.Icons.DATA_OBJECT, self.binary),
+                ("Calcular π", "Hasta 5000 decimales exactos", ft.Icons.PIE_CHART, self.pi),
+            ]),
+            ("Estadística y azar", [
+                ("Estadística", "Media, mediana, moda, desviación típica…", ft.Icons.BAR_CHART,
+                 lambda: mm.open_statistics(ctx)),
+                ("Dados", "Lanza dados de cualquier número de caras", ft.Icons.CASINO, self.dice),
+            ]),
         ]
-        grid = ft.ResponsiveRow(
-            [ft.Container(
-                ft.Card(ft.ListTile(
-                    leading=ft.Icon(icon, color=ft.Colors.PRIMARY),
-                    title=ft.Text(title, weight=ft.FontWeight.W_500),
-                    subtitle=ft.Text(sub, size=12),
-                    on_click=lambda e, fn=fn: fn(),
-                ), variant=ft.CardVariant.OUTLINED),
-                col={"xs": 12, "md": 6})
-             for title, sub, icon, fn in tools],
-            spacing=8, run_spacing=4,
-        )
-        super().__init__([ft.Container(grid, padding=12)], expand=True,
-                         scroll=ft.ScrollMode.AUTO)
+        controls: list[ft.Control] = []
+        for name, tools in groups:
+            controls.append(section_title(name))
+            controls.append(ft.ResponsiveRow(
+                [ft.Container(
+                    ft.Card(ft.ListTile(
+                        leading=ft.Icon(icon, color=ft.Colors.PRIMARY),
+                        title=ft.Text(title, weight=ft.FontWeight.W_500),
+                        subtitle=ft.Text(sub, size=12),
+                        on_click=lambda e, fn=fn: fn(),
+                    ), variant=ft.CardVariant.OUTLINED, margin=0),
+                    col={"xs": 12, "md": 6})
+                 for title, sub, icon, fn in tools],
+                spacing=8, run_spacing=6,
+            ))
+        super().__init__([ft.Container(ft.Column(controls, spacing=4),
+                                       padding=ft.Padding.only(left=12, right=12, bottom=16))],
+                         expand=True, scroll=ft.ScrollMode.AUTO)
 
     # ------------------------------------------------------------ 2º grado
     def quadratic(self) -> None:
