@@ -1,0 +1,26 @@
+[project]
+name = "mfq-all"
+version = "6.0.0"
+description = "MFQ All: calculadora de Física, Química y Matemáticas para el instituto"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "ToxBox8" }]
+dependencies = ["flet==1.1.3"]
+
+[dependency-groups]
+dev = ["flet[all]==1.1.3", "pytest>=8"]
+
+[tool.flet]
+org = "com.toxbox8"
+product = "MFQ All"
+company = "ToxBox8"
+copyright = "Copyright (C) 2026 ToxBox8"
+
+[tool.flet.app]
+path = "src"
+
+[tool.flet.android]
+# Nombre del paquete final: com.toxbox8.mfq_all
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
